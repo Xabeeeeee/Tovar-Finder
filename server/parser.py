@@ -1,18 +1,35 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from contextlib import contextmanager
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from .supported_markets import Market
-from typing import Generator
+from contextlib import contextmanager
 import time
 
 MAX_ATTEMPTS = 50
 STAGNATION_ATTEMPTS = 3
-PRELOAD_DELAY = 3
+TIMEOUT = 10
 LOAD_DELAY = 0.5
 NEEDED_REVIEWS = 500
 
 HTML_fetchTag = lambda parent, css_selector: parent.find_elements(By.CSS_SELECTOR, css_selector)
 HTML_findTag = lambda parent, css_selector: parent.find_element(By.CSS_SELECTOR, css_selector)
+
+@contextmanager
+def Driver():
+    driver = None
+    try:
+        options = webdriver.ChromeOptions()
+        options.add_argument('--disable-blink-features=AutomationControlled')
+        options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        options.add_experimental_option('useAutomationExtension', False)
+        driver = webdriver.Chrome(options=options)
+        driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+        driver.maximize_window()
+        yield driver
+    finally:
+        if driver:
+            driver.quit()
 
 def processReviews(reviews, market : Market):
 
@@ -75,23 +92,13 @@ def reviewParser(link : str, market : Market):
         return reviews_list
 
     try:
-        options = webdriver.ChromeOptions()
-        options.add_argument('--disable-blink-features=AutomationControlled')
-        options.add_experimental_option("excludeSwitches", ["enable-automation"])
-        options.add_experimental_option('useAutomationExtension', False)
-        driver = webdriver.Chrome(options=options)
-        driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
-        driver.maximize_window()
-    except:
-        print("Failed to start webdriver")
-        return None
-
-    try:
-        driver.maximize_window()
-        driver.get(link)
-        time.sleep(PRELOAD_DELAY)
-        reviews = JSscroller(driver)
-        return driver, processReviews(reviews, market)
+        with Driver() as driver:
+            driver.get(link)
+            WebDriverWait(driver, TIMEOUT).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, reviews_mask))
+            )
+            reviews = JSscroller(driver)
+            return list(processReviews(reviews, market))
     except:
         print("Failed to load page")
-        return driver, None
+        return None
