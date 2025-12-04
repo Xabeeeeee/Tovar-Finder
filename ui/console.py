@@ -1,5 +1,5 @@
 from enum import Enum
-from server.agent_model import process_input
+from server.agent_model import process_input, process_query
 class Colors(Enum):
     # Standard colors
     BLACK = '\033[30m'
@@ -53,7 +53,11 @@ def idle():
                 case "-f":
                     command, args = command.split(" ", maxsplit=1)
                     printf("magic happens here", color=Colors.HEADER)
-                    process_input(args)
+                    res = process_input(args)
+                    if res:
+                        process_query(res)
+                    else:
+                        printf("Something gone wrong. Try again.")
                 case "-h":
                     print_help_message()
                 case _:
@@ -64,6 +68,8 @@ def idle():
         print_commands(["-f <description>", "-q"], ["find some item", "quit"])
         command = input()
     print("Thanks for using, see you next time!")
+
+#-f Найди чайник 2кВт от 1000 до 5000 рублей
 
 
 def print_commands(commands: list[str], descriptions: list[str]):
