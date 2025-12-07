@@ -48,16 +48,13 @@ def idle():
     while command != "-q":
         try:
             while "  " in command: command = command.replace("  ", " ")
-
             match command[:2]:
                 case "-f":
                     command, args = command.split(" ", maxsplit=1)
                     printf("magic happens here", color=Colors.HEADER)
                     res = process_input(args)
-                    if res:
-                        process_query(res)
-                    else:
-                        printf("Something gone wrong. Try again.")
+                    if res: process_query(res)
+                    else: printf("Something gone wrong. Try again.")
                 case "-h":
                     print_help_message()
                 case _:

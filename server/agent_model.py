@@ -24,7 +24,7 @@ with open(os.path.dirname(getcwd()) + "\\prompts.json", encoding="utf8") as file
     # Convert JSON file content to a Python dictionary
     prompts = json.load(file)
 
-
+# Агент 1: преобразование описания
 def process_input(inp: str):
     data["messages"][0]["content"] = prompts["process_input"].replace("@#$%^", inp)
 
@@ -43,7 +43,7 @@ def process_input(inp: str):
         print(response.text)
         return ""
 
-
+# Агент 2: генерация модел
 def process_query(query: str):
     try:
         data["messages"][0]["content"] = prompts["find_offers"].replace("{}", query)
@@ -56,6 +56,24 @@ def process_query(query: str):
             raw = str(message)
             js = message[raw.find("["): raw.find("]") + 1]
             print(js)
+            return js
+        else:
+            return ""
+    except KeyError:
+        return ""
+
+# Агент 3: оценка полезности отзыва
+def process_review(review : str) -> dict:
+    try:
+        data["messages"][0]["content"] = prompts["rank_reviews"] + review
+        response = requests.post(url, headers=headers, json=data)
+
+        if response.status_code == 200:
+            result = response.json()
+            # Извлекаем ответ модели
+            message = result['choices'][0]['message']['content']
+            raw = str(message)
+            print(raw)
             return js
         else:
             return ""

@@ -11,6 +11,7 @@ STAGNATION_ATTEMPTS = 3
 TIMEOUT = 10
 LOAD_DELAY = 0.5
 NEEDED_REVIEWS = 500
+NEEDED_ITEMS = 10
 
 HTML_fetchTag = lambda parent, css_selector: parent.find_elements(By.CSS_SELECTOR, css_selector)
 HTML_findTag = lambda parent, css_selector: parent.find_element(By.CSS_SELECTOR, css_selector)
@@ -65,6 +66,32 @@ def processReviews(reviews, market : Market):
         except:
             print("Failed to process review")
 
+def processItems(items, market : Market):
+
+    name_mask, link_mask = market.value[4], market.value[5]
+
+    def getName(review) -> str:
+        try:
+            name = HTML_fetchTag(review, name_mask)[0].text
+        except:
+            name = "Unknown"
+        return name
+
+    def getLink(review) -> str:
+        try:
+            link = HTML_fetchTag(review, link_mask)[0].get_attribute('href')
+        except:
+            link = "about:blank"
+        return link
+
+    for review in items.find_elements(By.XPATH, './*'):
+        try:
+            name = getName(review)
+            link = getLink(review)
+            yield name, link
+        except:
+            print("Failed to process item")
+
 def reviewParser(link : str, market : Market):
 
     reviews_mask = market.value[3]
@@ -99,6 +126,44 @@ def reviewParser(link : str, market : Market):
             )
             reviews = JSscroller(driver)
             return list(processReviews(reviews, market))
+    except:
+        print("Failed to load page")
+        return None
+
+def catalogParser(link : str, market : Market):
+
+    catalog_mask = market.value[6]
+
+    def JSscroller(webpage):
+        atts, len_previous, stagnation = 0, 0, 0
+        catalog_list = HTML_findTag(webpage, catalog_mask)
+        while atts < MAX_ATTEMPTS:
+            try:
+                len_current = len(catalog_list.find_elements(By.XPATH, './*'))
+                if len_current >= NEEDED_ITEMS:
+                    break
+                if len_current == len_previous:
+                    stagnation += 1
+                    if stagnation >= STAGNATION_ATTEMPTS:
+                        break
+                else:
+                    stagnation = 0
+                len_previous = len_current
+                time.sleep(LOAD_DELAY)
+                atts += 1
+            except:
+                break
+        return catalog_list
+
+    try:
+        with Driver() as driver:
+            driver.get(link)
+            WebDriverWait(driver, TIMEOUT).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, catalog_mask))
+            )
+            if len(driver.find_elements(By.CSS_SELECTOR, market.value[8])): return None
+            items = JSscroller(driver)
+            return list(processItems(items, market))
     except:
         print("Failed to load page")
         return None
