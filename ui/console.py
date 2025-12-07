@@ -1,5 +1,7 @@
 from enum import Enum
 from server.agent_model import process_input, process_query
+
+
 class Colors(Enum):
     # Standard colors
     BLACK = '\033[30m'
@@ -27,18 +29,17 @@ class Colors(Enum):
     UNDERLINE = '\033[4m'
     REVERSE = '\033[7m'
 
-
-    #Aliases
+    # Aliases
     HEADER = BRIGHT_MAGENTA
     ERROR = BRIGHT_RED
     ENDL = RESET
     COMMAND = BRIGHT_CYAN
     TEXT = BRIGHT_WHITE
 
+
 def start():
     printf("Welcome to Tovar-Finder!", color=Colors.HEADER)
     idle()
-
 
 
 def idle():
@@ -53,8 +54,10 @@ def idle():
                     command, args = command.split(" ", maxsplit=1)
                     printf("magic happens here", color=Colors.HEADER)
                     res = process_input(args)
-                    if res: process_query(res)
-                    else: printf("Something gone wrong. Try again.")
+                    if res:
+                       process_query(res)
+                    else:
+                       printf("Something gone wrong. Try again.")
                 case "-h":
                     print_help_message()
                 case _:
@@ -66,7 +69,7 @@ def idle():
         command = input()
     print("Thanks for using, see you next time!")
 
-#-f Найди чайник 2кВт от 1000 до 5000 рублей
+# -f Найди чайник 2кВт от 1000 до 5000 рублей
 
 
 def print_commands(commands: list[str], descriptions: list[str]):
@@ -77,14 +80,33 @@ def print_commands(commands: list[str], descriptions: list[str]):
         printf(descr)
 
 
-def printf(message: str, color: Colors = Colors.TEXT, end='\n', ):
+def printf(message: str, color: Colors = Colors.TEXT, end='\n'):
     print(color.value + message + Colors.ENDL.value, end=end)
 
 
 def print_help_message():
-    printf( "MANUAL:\nto search type -f and provide some description (e. g. \"-f find a powerful hair dryer "
-            "between 20 and 50 bucks\")\n\nto exit program type -q", color=Colors.TEXT)
+    printf("MANUAL:\nto search type -f and provide some description (e. g. \"-f find a powerful hair dryer "
+           "between 20 and 50 bucks\")\n\nto exit program type -q", color=Colors.TEXT)
 
+
+def print_tovars(tovars: list[dict]):
+    i = 1
+    for item in tovars:
+        offset = " " * 2
+        printf(f"{i}.", end="")
+        printf(offset + f"model: ", color=Colors.BRIGHT_GREEN, end="")
+        printf(item["model"])
+        offset = " " * (len(str(i)) + 3)
+        printf(offset + f"link: ", color=Colors.BRIGHT_GREEN, end="")
+        printf(item["link"])
+        printf(offset + f"reviews: ", color=Colors.BRIGHT_GREEN, end="")
+        offset += " " * 2
+        j = 1
+        for review in item["reviews"]:
+            if review["ranking"] >= 4:
+                printf(offset + f"{j}.\n{review}")
+                j += 1
+        i += 1
 
 if __name__ == '__main__':
     start()
