@@ -1,5 +1,7 @@
 from enum import Enum
-from server.agent_model import process_input, process_query
+
+from server.agent1 import agent1
+from server.agent_model import process_query
 
 
 class Colors(Enum):
@@ -53,7 +55,8 @@ def idle():
                 case "-f":
                     command, args = command.split(" ", maxsplit=1)
                     printf("magic happens here", color=Colors.HEADER)
-                    res = process_input(args)
+                    finder = agent1()
+                    res = finder.process_input(args)
                     if res:
                        process_query(res)
                     else:
