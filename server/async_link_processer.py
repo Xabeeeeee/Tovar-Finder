@@ -1,6 +1,6 @@
 import asyncio
 from .parser import reviewParser, catalogParser
-from .supported_markets import Market
+from .enums import Market
 from typing import List, Any
 
 

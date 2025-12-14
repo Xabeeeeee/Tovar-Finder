@@ -1,42 +1,6 @@
-from enum import Enum
-
-from server.agent1 import agent1
-from server.agent_model import process_query
-
-
-class Colors(Enum):
-    # Standard colors
-    BLACK = '\033[30m'
-    RED = '\033[31m'
-    GREEN = '\033[32m'
-    YELLOW = '\033[33m'
-    BLUE = '\033[34m'
-    MAGENTA = '\033[35m'
-    CYAN = '\033[36m'
-    WHITE = '\033[37m'
-
-    # Bright colors
-    BRIGHT_BLACK = '\033[90m'
-    BRIGHT_RED = '\033[91m'
-    BRIGHT_GREEN = '\033[92m'
-    BRIGHT_YELLOW = '\033[93m'
-    BRIGHT_BLUE = '\033[94m'
-    BRIGHT_MAGENTA = '\033[95m'
-    BRIGHT_CYAN = '\033[96m'
-    BRIGHT_WHITE = '\033[97m'
-
-    # Styles
-    RESET = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
-    REVERSE = '\033[7m'
-
-    # Aliases
-    HEADER = BRIGHT_MAGENTA
-    ERROR = BRIGHT_RED
-    ENDL = RESET
-    COMMAND = BRIGHT_CYAN
-    TEXT = BRIGHT_WHITE
+from server.agent1 import *
+from server.agent2 import *
+from server.agent3 import *
 
 
 def start():
@@ -55,21 +19,20 @@ def idle():
                 case "-f":
                     command, args = command.split(" ", maxsplit=1)
                     printf("magic happens here", color=Colors.HEADER)
-                    finder = agent1()
-                    res = finder.process_input(args)
-                    if res:
-                       process_query(res)
-                    else:
-                       printf("Something gone wrong. Try again.")
+                    res = agent1().process_input(args)
+                    if res in Errors.AGENT1_NULL.value.replace("@#$%^", args):
+                        printf("An error occurred when processing user input.", Colors.ERROR)
+                        raise ValueError
+                    agent2().process_query(res)
                 case "-h":
                     print_help_message()
                 case _:
                     raise ValueError("invalid input")
-        except ValueError:
-            printf("invalid input. Try again", Colors.ERROR)
+        except ConnectionError:
+            printf("No connection. Please try again later.", Colors.ERROR)
 
         print_commands(["-f <description>", "-q"], ["find some item", "quit"])
-        command = input()
+        command = input().strip()
     print("Thanks for using, see you next time!")
 
 # -f Найди чайник 2кВт от 1000 до 5000 рублей

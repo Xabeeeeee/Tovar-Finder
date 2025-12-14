@@ -37,6 +37,4 @@ class agent2:
             print(js)
             return js
         else:
-            print(f"Ошибка: {response.status_code}")
-            print(response.text)
-            return ""
+            raise ConnectionError

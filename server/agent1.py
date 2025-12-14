@@ -3,6 +3,7 @@ import os
 from os import getcwd
 
 import requests
+from .enums import *
 
 url = "https://openrouter.ai/api/v1/chat/completions"
 api_key = os.getenv("OPENROUTER_API_KEY")
@@ -36,6 +37,4 @@ class agent1:
             js = message[raw.find("{"): raw.find("}") + 1]
             return js
         else:
-            print(f"Ошибка: {response.status_code}")
-            print(response.text)
-            return ""
+            raise ConnectionError

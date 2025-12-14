@@ -45,6 +45,4 @@ class agent3:
                 scores.extend([0] * (len(reviews) - len(scores)))
             return scores[:len(reviews)]
         else:
-            print(f"Ошибка: {response.status_code}")
-            print(response.text)
-            return [0] * len(reviews)
+            raise ConnectionError
