@@ -76,7 +76,6 @@ def print_tovars(tovars: list[dict], ranks: list[list[int]]):
 
 async def processRequest(command: str):
     command, args = command.split(" ", maxsplit=1)
-    printf("magic happens here", color=Colors.HEADER)
     processed_input = agent1().process_input(args)
     if processed_input in Errors.AGENT1_NULL.value.replace("@#$%^", args):
         printf("An error occurred when processing user input.", Colors.ERROR)

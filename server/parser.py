@@ -127,7 +127,6 @@ def reviewParser(link : str, market : Market):
             reviews = JSscroller(driver)
             return list(processReviews(reviews, market))
     except:
-        print("Failed to load page")
         return None
 
 def catalogParser(link : str, market : Market):
@@ -165,5 +164,4 @@ def catalogParser(link : str, market : Market):
             items = JSscroller(driver)
             return list(processItems(items, market))
     except:
-        print("Failed to load page")
         return None
