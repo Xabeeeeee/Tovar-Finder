@@ -8,7 +8,7 @@ import requests
 url = "https://openrouter.ai/api/v1/chat/completions"
 api_key = os.getenv("OPENROUTER_API_KEY")
 headers = {
-    "Authorization": "",
+    "Authorization": f"Bearer {api_key}",
     "Content-Type": "application/json",
     "HTTP-Referer": "https://github.com/Xabeeeeee/Tovar-Finder",
     "X-Title": "Tovar-Finder Agent 3"
@@ -26,10 +26,10 @@ class agent3:
         prompt = json.load(file)["rank_reviews"]
 
     # Агент 3: оценка полезности отзыва
-    def process_reviews(self, reviews: list[str]) -> list[int]:
+    def process_reviews(self, reviews: list[dict]) -> list[int]:
         reviews_text = "\n\n"
         for i, review in enumerate(reviews):
-            clean = review.replace("\n", "\t").strip()
+            clean = review["desc"].replace("\n", "\t").strip()
             reviews_text += f"{i+1}. {clean}\n"
             
         self.data["messages"][0]["content"] = self.prompt + reviews_text

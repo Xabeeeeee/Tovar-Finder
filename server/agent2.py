@@ -34,7 +34,6 @@ class agent2:
             message = result['choices'][0]['message']['content']
             raw = str(message)
             js = message[raw.find("["): raw.find("]") + 1]
-            print(js)
             return js
         else:
             raise ConnectionError

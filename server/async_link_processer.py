@@ -14,13 +14,13 @@ async def parseItems_single(link : str, market : Market) -> Any:
     return result
 
 
-async def parseReviews(links: List[str], market : Market):
-    tasks = [parseReviews_single(link, market) for link in links]
+async def parseReviews(itemlinks: List[tuple], market: Market):
+    tasks = [parseReviews_single(link[1][:link[1].rfind('/')] + "/feedbacks", market) for link in itemlinks]
     results = await asyncio.gather(*tasks)
-    return tuple(zip(links, results))
+    return results
 
 
-async def parseItems(items: List[str], market : Market):
-    tasks = [parseItems_single(market.value[7].replace("{}", item), market) for item in items]
+async def parseItems(items: List[dict], market : Market):
+    tasks = [parseItems_single(market.value[7].replace("{}", item["model"]), market) for item in items]
     results = await asyncio.gather(*tasks)
-    return tuple(zip(items, results))
+    return results

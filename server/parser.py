@@ -8,9 +8,9 @@ import time
 
 MAX_ATTEMPTS = 50
 STAGNATION_ATTEMPTS = 3
-TIMEOUT = 10
+TIMEOUT = 30
 LOAD_DELAY = 0.5
-NEEDED_REVIEWS = 500
+NEEDED_REVIEWS = 30
 NEEDED_ITEMS = 10
 
 HTML_fetchTag = lambda parent, css_selector: parent.find_elements(By.CSS_SELECTOR, css_selector)

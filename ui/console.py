@@ -1,7 +1,9 @@
+import asyncio
 from server.agent1 import *
 from server.agent2 import *
 from server.agent3 import *
-
+from server.async_link_processer import parseItems
+from server.async_link_processer import parseReviews
 
 def start():
     printf("Welcome to Tovar-Finder!", color=Colors.HEADER)
@@ -17,13 +19,7 @@ def idle():
             while "  " in command: command = command.replace("  ", " ")
             match command[:2]:
                 case "-f":
-                    command, args = command.split(" ", maxsplit=1)
-                    printf("magic happens here", color=Colors.HEADER)
-                    res = agent1().process_input(args)
-                    if res in Errors.AGENT1_NULL.value.replace("@#$%^", args):
-                        printf("An error occurred when processing user input.", Colors.ERROR)
-                        raise ValueError
-                    agent2().process_query(res)
+                    asyncio.run(processRequest(command))
                 case "-h":
                     print_help_message()
                 case _:
@@ -55,24 +51,67 @@ def print_help_message():
            "between 20 and 50 bucks\")\n\nto exit program type -q", color=Colors.TEXT)
 
 
-def print_tovars(tovars: list[dict]):
+def print_tovars(tovars: list[dict], ranks: list[list[int]]):
     i = 1
-    for item in tovars:
+    for j1, item in enumerate(tovars):
         offset = " " * 2
         printf(f"{i}.", end="")
-        printf(offset + f"model: ", color=Colors.BRIGHT_GREEN, end="")
+        printf(offset + "model: ", color=Colors.BRIGHT_GREEN, end="")
         printf(item["model"])
-        offset = " " * (len(str(i)) + 3)
-        printf(offset + f"link: ", color=Colors.BRIGHT_GREEN, end="")
+        offset = " " * 2
+        printf(offset + "link: ", color=Colors.BRIGHT_GREEN, end="")
         printf(item["link"])
-        printf(offset + f"reviews: ", color=Colors.BRIGHT_GREEN, end="")
-        offset += " " * 2
-        j = 1
-        for review in item["reviews"]:
-            if review["ranking"] >= 4:
-                printf(offset + f"{j}.\n{review}")
-                j += 1
+        printf(offset + "reviews: ", color=Colors.BRIGHT_GREEN, end="")
+        offset = " " * 4
+        good_reviews = []
+        for j2, review in enumerate(item["reviews"]):
+            if len(good_reviews) == 3: break
+            if ranks[j1][j2] >= 4 and review["desc"] != "No description": good_reviews.append(review)
+        if len(good_reviews) == 0: printf("No reviews found\n", color=Colors.ERROR)
+        else:
+            for review in good_reviews:
+                printf(f"\n{offset}{review["name"]} ({review["rating"]}*):\n{offset}{review["desc"]}")
         i += 1
+
+
+async def processRequest(command: str):
+    command, args = command.split(" ", maxsplit=1)
+    printf("magic happens here", color=Colors.HEADER)
+    processed_input = agent1().process_input(args)
+    if processed_input in Errors.AGENT1_NULL.value.replace("@#$%^", args):
+        printf("An error occurred when processing user input.", Colors.ERROR)
+        raise ValueError
+    models = agent2().process_query(processed_input)
+    items = await agent2_to_reviews(eval(models))
+    rankingsAwait = [asyncio.to_thread(agent3().process_reviews, item["reviews"]) for item in items]
+    rankings = await asyncio.gather(*rankingsAwait)
+    print_tovars(items, rankings)
+
+
+async def agent2_to_reviews(tovars: list[dict]):
+    catalogAwait = await parseItems(tovars, Market.WILDBERRIES)
+    catalog = []
+    for model in catalogAwait:
+        if model is None: continue
+        catalog.extend(model[:3])
+        if len(catalog) >= 9: break
+    reviews = await parseReviews(catalog, Market.WILDBERRIES)
+    items = []
+    for item, item_reviews in zip(catalog, reviews):
+        if item_reviews is None: continue
+        REVIEWS = list()
+        for review in item_reviews:
+            REVIEW = dict()
+            REVIEW["name"] = review[0]
+            REVIEW["rating"] = review[1]
+            REVIEW["desc"] = review[2]
+            REVIEWS.append(REVIEW)
+        ITEM = dict()
+        ITEM["model"] = item[0]
+        ITEM["link"] = item[1]
+        ITEM["reviews"] = REVIEWS
+        items.append(ITEM)
+    return items
 
 if __name__ == '__main__':
     start()
